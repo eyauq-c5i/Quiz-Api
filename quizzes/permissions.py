@@ -1,13 +1,9 @@
 from rest_framework.permissions import BasePermission
 
 class IsEducator(BasePermission):
-    """
-    Allows access only to users with educator role.
-    """
-
     def has_permission(self, request, view):
         return (
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == 'educator'
+            request.user and
+            request.user.is_authenticated and
+            request.user.groups.filter(name='Educators').exists()
         )
