@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Quiz
+from .models import Quiz, QuizAttempt
 from .serializers import (
     QuizCreateSerializer,
     QuizSerializer,
@@ -51,6 +51,42 @@ class SubmitQuizView(APIView):
 
             if student_answer.selected_answer.is_correct:
                 score += 1
+
+        return Response({
+            "message": "Quiz submitted successfully",
+            "score": score
+        })
+
+
+class SubmitQuizView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, quiz_id):
+        quiz = Quiz.objects.get(id=quiz_id)
+
+        # Prevent retakes
+        if QuizAttempt.objects.filter(student=request.user, quiz=quiz).exists():
+            return Response(
+                {"detail": "You have already taken this quiz."},
+                status=400
+            )
+
+        answers = request.data.get('answers', [])
+        score = 0
+
+        for ans in answers:
+            serializer = StudentAnswerSerializer(data=ans)
+            serializer.is_valid(raise_exception=True)
+            student_answer = serializer.save(student=request.user)
+
+            if student_answer.selected_answer.is_correct:
+                score += 1
+
+        QuizAttempt.objects.create(
+            student=request.user,
+            quiz=quiz,
+            score=score
+        )
 
         return Response({
             "message": "Quiz submitted successfully",
