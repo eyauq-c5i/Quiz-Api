@@ -8,6 +8,7 @@ from .serializers import (
     QuizCreateSerializer,
     QuizSerializer,
     StudentAnswerSerializer,
+    QuizAttemptSerializer,
 )
 from .permissions import IsEducator
 
@@ -92,3 +93,11 @@ class SubmitQuizView(APIView):
             "message": "Quiz submitted successfully",
             "score": score
         })
+
+
+class QuizAttemptHistoryView(generics.ListAPIView):
+    serializer_class = QuizAttemptSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return QuizAttempt.objects.filter(student=self.request.user)
