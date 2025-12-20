@@ -17,6 +17,12 @@ class Quiz(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+# New field for time-limited quizzes
+    duration_minutes = models.PositiveIntegerField(
+        default=0,
+        help_text="Duration of quiz in minutes (0 = unlimited)"
+    )
+
     def __str__(self):
         return self.title
 
@@ -55,8 +61,9 @@ class StudentAnswer(models.Model):
 class QuizAttempt(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    score = models.IntegerField()
-    taken_at = models.DateTimeField(default=timezone.now)
+    score = models.IntegerField(default=0)
+    started_at = models.DateTimeField(default=timezone.now)
+    completed_at = models.DateTimeField(null=True, blank=True)  # null if quiz not finished
 
     class Meta:
         unique_together = ('student', 'quiz')

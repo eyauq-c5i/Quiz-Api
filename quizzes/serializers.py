@@ -21,7 +21,7 @@ class QuizCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ('id', 'title', 'description', 'questions')
+        fields = ('id', 'title', 'description', 'duration_minutes', 'questions')
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions')
@@ -48,7 +48,7 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ['id', 'title', 'description', 'questions']
+        fields = ['id', 'title', 'description', 'duration_minutes', 'questions']
 
 
 class StudentAnswerSerializer(serializers.ModelSerializer):
@@ -56,10 +56,17 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
         model = StudentAnswer
         fields = ['question', 'selected_answer']
 
+    def validate(self, data):
+        question = data['question']
+        selected_answer = data['selected_answer']
+        if selected_answer.question != question:
+            raise serializers.ValidationError("Selected answer does not belong to the question.")
+        return data
+
 
 class QuizAttemptSerializer(serializers.ModelSerializer):
     quiz_title = serializers.CharField(source='quiz.title', read_only=True)
 
     class Meta:
         model = QuizAttempt
-        fields = ['id', 'quiz', 'quiz_title', 'score', 'taken_at']
+        fields = ['id', 'quiz', 'quiz_title', 'score', 'started_at', 'completed_at']
