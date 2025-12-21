@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from drf_spectacular.utils import extend_schema
+
 from .models import Quiz, QuizAttempt, StudentAnswer
 from .serializers import (
     QuizCreateSerializer,
@@ -15,6 +17,10 @@ from .permissions import IsEducator
 
 
 # Educator: Create quiz
+@extend_schema(
+    summary="Create a quiz",
+    description="Educators can create quizzes with questions, answers, and optional time limits."
+)
 class QuizCreateView(generics.CreateAPIView):
     queryset = Quiz.objects.all()
     serializer_class = QuizCreateSerializer
@@ -25,6 +31,10 @@ class QuizCreateView(generics.CreateAPIView):
 
 
 # Student + Educator: List quizzes
+@extend_schema(
+    summary="List quizzes",
+    description="Retrieve all available quizzes."
+)
 class QuizListView(generics.ListAPIView):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
@@ -32,6 +42,10 @@ class QuizListView(generics.ListAPIView):
 
 
 # Student + Educator: Retrieve single quiz
+@extend_schema(
+    summary="Retrieve a quiz",
+    description="Get quiz details including questions and answers."
+)
 class QuizDetailView(generics.RetrieveAPIView):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
@@ -39,6 +53,14 @@ class QuizDetailView(generics.RetrieveAPIView):
 
 
 # Student: Attempt and submit quiz (time-limited)
+@extend_schema(
+    summary="Submit quiz answers",
+    description=(
+        "Submit answers for a quiz attempt. "
+        "If the quiz has a time limit, submission is blocked after expiration. "
+        "Each student can only attempt a quiz once."
+    )
+)
 class SubmitQuizView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -46,25 +68,32 @@ class SubmitQuizView(APIView):
         try:
             quiz = Quiz.objects.get(id=quiz_id)
         except Quiz.DoesNotExist:
-            return Response({"detail": "Quiz not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Quiz not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        # Check for existing attempt (optional: prevent retakes)
+        # Get or create attempt
         attempt, created = QuizAttempt.objects.get_or_create(
             student=request.user,
             quiz=quiz,
             defaults={'started_at': timezone.now()}
         )
 
-        # Check time limit
+        # Enforce time limit
         if quiz.duration_minutes > 0:
-            end_time = attempt.started_at + timezone.timedelta(minutes=quiz.duration_minutes)
+            end_time = attempt.started_at + timezone.timedelta(
+                minutes=quiz.duration_minutes
+            )
             if timezone.now() > end_time:
                 attempt.completed_at = end_time
                 attempt.save()
-                return Response({"detail": "Time is up! You cannot submit answers."},
-                                status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"detail": "Time is up! You cannot submit answers."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-        # Process submitted answers
+        # Process answers
         answers_data = request.data.get('answers', [])
         serializer = StudentAnswerSerializer(data=answers_data, many=True)
         serializer.is_valid(raise_exception=True)
@@ -78,7 +107,10 @@ class SubmitQuizView(APIView):
 
         # Calculate score
         score = 0
-        for ans in StudentAnswer.objects.filter(student=request.user, question__quiz=quiz):
+        for ans in StudentAnswer.objects.filter(
+            student=request.user,
+            question__quiz=quiz
+        ):
             if ans.selected_answer.is_correct:
                 score += 1
 
@@ -96,6 +128,10 @@ class SubmitQuizView(APIView):
 
 
 # Student: View attempt history
+@extend_schema(
+    summary="Quiz attempt history",
+    description="Retrieve the authenticated user's quiz attempt history."
+)
 class QuizAttemptHistoryView(generics.ListAPIView):
     serializer_class = QuizAttemptSerializer
     permission_classes = [IsAuthenticated]

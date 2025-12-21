@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     #Third-party
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
 
     #Local-apps
     'users',
@@ -139,12 +140,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # DJANGO REST FRAMEWORK
 REST_FRAMEWORK = {
-'DEFAULT_AUTHENTICATION_CLASSES': (
-'rest_framework_simplejwt.authentication.JWTAuthentication',
-),
-'DEFAULT_PERMISSION_CLASSES': (
-'rest_framework.permissions.IsAuthenticated',
-),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
 
 # SIMPLE JWT
@@ -166,5 +169,14 @@ CORS_ALLOW_HEADERS = [
 'x-csrftoken',
 'x-requested-with',
 ]
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Quiz API',
+    'DESCRIPTION': 'API documentation for the Quiz platform with time-limited quizzes',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
 
 AUTH_USER_MODEL = 'users.User'
