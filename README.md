@@ -28,3 +28,98 @@ Retrieve a single quiz
 Create a quiz (educators only)
 Submit/attempt a quiz
 View quiz attempt history
+
+
+✅User End-points
+#Register
+URL: http://127.0.0.1:8000/api/auth/register/
+Method: POST
+Body (JSON):
+
+{
+  "username": "kofi",
+  "email": "kofi@test.com",
+  "password": "thefreshboy123",
+  "role": "educator"
+}
+
+
+#Login
+URL: http://127.0.0.1:8000/api/auth/token/
+Method: POST
+Body (JSON):
+
+{
+  "username": "kofi",
+  "password": "thefreshboy123",
+}
+
+
+#Create Quiz (Educator only)
+URL: http://127.0.0.1:8000/api/quizzes/create/
+Method: POST
+Headers:
+Authorization: Bearer <access_token>
+
+{
+  "title": "Math Quiz",
+  "description": "Simple math questions",
+  "duration_minutes": 10,
+  "questions": [
+    {
+      "text": "2+2?",
+      "answers": [
+        {"text": "3", "is_correct": false},
+        {"text": "4", "is_correct": true}
+      ]
+    },
+    {
+      "text": "5-3?",
+      "answers": [
+        {"text": "2", "is_correct": true},
+        {"text": "3", "is_correct": false}
+      ]
+    }
+  ]
+}
+
+
+#List Quizzes (All users)
+URL: http://127.0.0.1:8000/api/quizzes/
+Method: GET
+Headers:
+Authorization: Bearer <access_token>
+
+
+#Retrieve Quiz (All users)
+URL: http://127.0.0.1:8000/api/quizzes/<quiz_id>/
+Method: GET
+Headers:
+Authorization: Bearer <access_token>
+
+
+#Submit Quiz Answers (Student only)
+URL: /api/quizzes/<quiz_id>/submit/
+Method: POST
+Headers:
+Authorization: Bearer <access_token>
+
+{
+  "answers": [
+    {
+      "question": 1,
+      "selected_answer": 2
+    },
+    {
+      "question": 2,
+      "selected_answer": 3
+    }
+  ]
+}
+
+
+#Quiz Attempt History (Student only)
+URL: /api/quizzes/attempts/
+Method: GET
+Headers:
+Authorization: Bearer <access_token>
