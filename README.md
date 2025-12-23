@@ -40,7 +40,7 @@ Body (JSON):
   "username": "kofi",
   "email": "kofi@test.com",
   "password": "thefreshboy123",
-  "role": "educator"
+  "role": "student"
 }
 
 
@@ -49,9 +49,16 @@ URL: http://127.0.0.1:8000/api/auth/token/
 Method: POST
 Body (JSON):
 
+**Educator
+{
+  "username": "jeff",
+  "password": "wawolo123"
+}
+
+**Student
 {
   "username": "kofi",
-  "password": "thefreshboy123",
+  "password": "thefreshboy123"
 }
 
 
