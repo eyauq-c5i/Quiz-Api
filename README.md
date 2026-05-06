@@ -1,73 +1,93 @@
-#Quiz API
-A Django REST Framework (DRF) backend for managing quizzes, supporting time-limited attempts, multiple-choice questions, student answers, and educator quiz creation.
+# Quiz API
 
+A Django REST Framework (DRF) backend for managing quizzes.
+Supports time-limited attempts, multiple-choice questions, student submissions, and educator quiz creation.
 
-#Features
-✅ Quiz Management
-Educators can create quizzes with multiple questions and answers.
-Each quiz can have an optional time limit (duration_minutes).
+---
 
-✅ Question & Answer Management
-Supports multiple-choice questions.
-Each answer has a boolean is_correct flag.
-Students can submit answers per question.
+## 🚀 Features
 
-✅ Time-Limited Quizzes
-Each quiz can have a duration_minutes limit.
-Tracks when the attempt starts (started_at) and finishes (completed_at).
-Prevents submission if time expires.
+### Quiz Management
 
-✅ Student Quiz Attempts
-Tracks quiz attempts per student.
-Calculates and stores score automatically.
-Optionally prevents multiple attempts per quiz.
+* Educators can create quizzes with multiple questions and answers
+* Optional time limit using `duration_minutes`
 
-✅ APIs
-List all quizzes
-Retrieve a single quiz
-Create a quiz (educators only)
-Submit/attempt a quiz
-View quiz attempt history
+### Question & Answer Management
 
+* Multiple-choice questions supported
+* Each answer includes an `is_correct` flag
+* Students submit one answer per question
 
-✅User End-points
-#Register
-URL: http://127.0.0.1:8000/api/auth/register/
-Method: POST
-Body (JSON):
+### Time-Limited Quizzes
 
+* Tracks `started_at` and `completed_at`
+* Prevents submissions after time expires
+
+### Student Quiz Attempts
+
+* Tracks attempts per student
+* Automatically calculates and stores scores
+* Optional restriction on multiple attempts
+
+---
+
+## ⚙️ Tech Stack
+
+* Python
+* Django
+* Django REST Framework
+* MySQL
+* JWT Authentication
+
+---
+
+## 🔐 Authentication
+
+Uses JWT (Bearer Token)
+
+Header format:
+
+```
+Authorization: Bearer <access_token>
+```
+
+---
+
+## 📌 API Endpoints
+
+### 1. Register User
+
+**POST** `/api/auth/register/`
+
+```json
 {
   "username": "kofi",
   "email": "kofi@test.com",
   "password": "thefreshboy123",
   "role": "student"
 }
+```
 
+---
 
-#Login
-URL: http://127.0.0.1:8000/api/auth/token/
-Method: POST
-Body (JSON):
+### 2. Login (Get Token)
 
-**Educator
-{
-  "username": "jeff",
-  "password": "wawolo123"
-}
+**POST** `/api/auth/token/`
 
-**Student
+```json
 {
   "username": "kofi",
   "password": "thefreshboy123"
 }
+```
 
+---
 
-#Create Quiz (Educator only)
-URL: http://127.0.0.1:8000/api/quizzes/create/
-Method: POST
-Headers:
-Authorization: Bearer <access_token>
+### 3. Create Quiz (Educators Only)
 
+**POST** `/api/quizzes/create/`
+
+```json
 {
   "title": "Math Quiz",
   "description": "Simple math questions",
@@ -79,54 +99,81 @@ Authorization: Bearer <access_token>
         {"text": "3", "is_correct": false},
         {"text": "4", "is_correct": true}
       ]
-    },
-    {
-      "text": "5-3?",
-      "answers": [
-        {"text": "2", "is_correct": true},
-        {"text": "3", "is_correct": false}
-      ]
     }
   ]
 }
+```
 
+---
 
-#List Quizzes (All users)
-URL: http://127.0.0.1:8000/api/quizzes/
-Method: GET
-Headers:
-Authorization: Bearer <access_token>
+### 4. List Quizzes
 
+**GET** `/api/quizzes/`
 
-#Retrieve Quiz (All users)
-URL: http://127.0.0.1:8000/api/quizzes/<quiz_id>/
-Method: GET
-Headers:
-Authorization: Bearer <access_token>
+---
 
+### 5. Retrieve Quiz
 
-#Submit Quiz Answers (Student only)
-URL: /api/quizzes/<quiz_id>/submit/
-Method: POST
-Headers:
-Authorization: Bearer <access_token>
+**GET** `/api/quizzes/<quiz_id>/`
 
+---
+
+### 6. Submit Quiz Answers (Students Only)
+
+**POST** `/api/quizzes/<quiz_id>/submit/`
+
+```json
 {
   "answers": [
     {
       "question": 1,
       "selected_answer": 2
-    },
-    {
-      "question": 2,
-      "selected_answer": 3
     }
   ]
 }
+```
 
+---
 
-#Quiz Attempt History (Student only)
-URL: /api/quizzes/attempts/
-Method: GET
-Headers:
-Authorization: Bearer <access_token>
+### 7. Quiz Attempt History (Students Only)
+
+**GET** `/api/quizzes/attempts/`
+
+---
+
+## 🧪 Running Locally
+
+1. Clone the repository
+2. Create a virtual environment
+3. Install dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+4. Run migrations:
+
+```
+python manage.py migrate
+```
+
+5. Start server:
+
+```
+python manage.py runserver
+```
+
+---
+
+## 📌 Notes
+
+* Only educators can create quizzes
+* Only students can submit answers
+* Ensure token is included in protected routes
+* Time-limited quizzes will reject late submissions
+
+---
+
+## 📄 License
+
+This project is for learning and educational purposes.
