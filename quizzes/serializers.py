@@ -81,7 +81,6 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentAnswer
         fields = ['question', 'selected_answer']
-        read_only_fields = ['id']
 
     def validate(self, data):
         question = data['question']
