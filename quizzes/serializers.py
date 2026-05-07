@@ -5,7 +5,14 @@ from .models import Quiz, Question, Answer, StudentAnswer, QuizAttempt
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
+        fields = ('id', 'text')
+        read_only_fields = ['id']
+
+class AnswerCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
         fields = ('id', 'text', 'is_correct')
+        read_only_fields = ['id']
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -14,15 +21,33 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ('id', 'text', 'answers')
+        read_only_fields = ['id']
+
+
+class QuestionCreateSerializer(serializers.ModelSerializer):
+    answers = AnswerCreateSerializer(many=True)
+
+    class Meta:
+        model = Question
+        fields = ('id', 'text', 'answers')
+        read_only_fields = ['id']
 
 
 class QuizCreateSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True)
+    questions = QuestionCreateSerializer(many=True)
 
     class Meta:
         model = Quiz
         fields = ('id', 'title', 'description', 'duration_minutes', 'questions')
+        read_only_fields = ['id']
 
+    def validate_questions(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "A quiz must contain at least one question."
+            )
+        return value
+    
     def create(self, validated_data):
         questions_data = validated_data.pop('questions')
         quiz = Quiz.objects.create(**validated_data)
@@ -49,18 +74,22 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ['id', 'title', 'description', 'duration_minutes', 'questions']
+        read_only_fields = ['id']
 
 
 class StudentAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentAnswer
         fields = ['question', 'selected_answer']
+        read_only_fields = ['id']
 
     def validate(self, data):
         question = data['question']
         selected_answer = data['selected_answer']
         if selected_answer.question != question:
-            raise serializers.ValidationError("Selected answer does not belong to the question.")
+            raise serializers.ValidationError({
+                "selected_answer": "Selected answer does not belong to the question."
+            })
         return data
 
 
@@ -70,3 +99,4 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizAttempt
         fields = ['id', 'quiz', 'quiz_title', 'score', 'started_at', 'completed_at']
+        read_only_fields = ['id']
