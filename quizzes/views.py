@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter
 
 from .models import Quiz, QuizAttempt, StudentAnswer
 from .serializers import (
@@ -19,7 +20,10 @@ from .permissions import IsEducator
 # Educator: Create quiz
 @extend_schema(
     summary="Create a quiz",
-    description="Educators can create quizzes with questions, answers, and optional time limits."
+    description="Educators can create quizzes with questions, answers, and optional time limits.",
+    request=QuizCreateSerializer,
+    responses={201: QuizSerializer},
+    tags=["Quizzes"]
 )
 class QuizCreateView(generics.CreateAPIView):
     queryset = Quiz.objects.all()
@@ -33,7 +37,9 @@ class QuizCreateView(generics.CreateAPIView):
 # Student + Educator: List quizzes
 @extend_schema(
     summary="List quizzes",
-    description="Retrieve all available quizzes."
+    description="Retrieve all available quizzes.",
+    responses={200: QuizSerializer(many=True)},
+    tags=["Quizzes"]
 )
 class QuizListView(generics.ListAPIView):
     queryset = Quiz.objects.all()
@@ -44,7 +50,17 @@ class QuizListView(generics.ListAPIView):
 # Student + Educator: Retrieve single quiz
 @extend_schema(
     summary="Retrieve a quiz",
-    description="Get quiz details including questions and answers."
+    description="Get quiz details including questions and answers.",
+    responses={200: QuizSerializer},
+    tags=["Quizzes"],
+    parameters=[
+        OpenApiParameter(
+            name="pk",
+            description="ID of the quiz",
+            required=True,
+            type=int
+        )
+    ]
 )
 class QuizDetailView(generics.RetrieveAPIView):
     queryset = Quiz.objects.all()
@@ -57,9 +73,31 @@ class QuizDetailView(generics.RetrieveAPIView):
     summary="Submit quiz answers",
     description=(
         "Submit answers for a quiz attempt. "
-        "If the quiz has a time limit, submission is blocked after expiration. "
-        "Each student can only attempt a quiz once."
-    )
+        "Late submissions are rejected for timed quizzes."
+    ),
+    request=StudentAnswerSerializer(many=True),
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "score": {"type": "integer"},
+                "started_at": {"type": "string"},
+                "completed_at": {"type": "string"},
+            }
+        },
+        403: {"description": "Time expired"},
+        403: {"description": "Quiz not found"},
+    },
+    tags=["Attempts"],
+    parameters=[
+        OpenApiParameter(
+            name="quiz_id",
+            description="ID of the quiz",
+            required=True,
+            type=int
+        )
+    ]
 )
 class SubmitQuizView(APIView):
     permission_classes = [IsAuthenticated]
@@ -130,7 +168,9 @@ class SubmitQuizView(APIView):
 # Student: View attempt history
 @extend_schema(
     summary="Quiz attempt history",
-    description="Retrieve the authenticated user's quiz attempt history."
+    description="Retrieve the authenticated user's quiz attempt history.",
+    responses={200: QuizAttemptSerializer(many=True)},
+    tags=["Attempts"]
 )
 class QuizAttemptHistoryView(generics.ListAPIView):
     serializer_class = QuizAttemptSerializer
